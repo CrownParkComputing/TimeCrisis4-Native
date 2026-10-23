@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/CrownParkComputing/TimeCrisis3-Native",
+  "commit": "74880d42caa7107dd443ebc993677930b1a1b6d6",
+  "role": "Shared Linux/Vulkan/Nuklear in-process compatibility foundation",
+  "executable": ".local/core-build/bin/tc3-native",
+  "status": "Tested TC4 normal boot/attract/title and shared Sinden/cabinet menu software checks; full gameplay and networking unvalidated"
+}
