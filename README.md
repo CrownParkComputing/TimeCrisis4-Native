@@ -74,14 +74,8 @@ Mouse aiming, left-button trigger, Space pedal, `5` coin and Return start are
 configured as the input baseline. **F10** opens the shared Nuklear menu;
 arrow keys and Enter navigate it; Escape resumes. **F8** captures the renderer's
 own game image. Actual TC4 gun calibration, shot alignment and full gameplay
-have not yet been validated.
-
-SDL3 gamepads are detected and hot-plugged automatically (shown as `Pad:` on
-the Display tab): the D-pad navigates the menu, Start starts/inserts, Back is
-coin, A is the GunCon2 pedal and B is JVS button 1 — pad buttons feed the same
-`Keyboard/*` bindings as the keyboard. Aim remains mouse/Sinden. In a linked
-pair the supervisor assigns pad 0 to the left screen and pad 1 to the right
-(`TC3_PAD_INDEX` overrides).
+have not yet been validated. TC4 is a lightgun cabinet: input is mouse or
+Sinden gun plus keyboard only; gamepads are not mapped on this title.
 
 The shared menu has three tabs — **File**, **Display & Rendering** and
 **Cabinet / Service**:
