@@ -1,28 +1,43 @@
 # Time Crisis 4 dual-screen status
 
-A genuine second cabinet view must show the other camera and stay synchronized
-with player one, including when only player one has joined. Two unrelated game
-windows or a mirrored first view do not satisfy that requirement.
+`python3 tools/run_tc4.py --dual-screen` launches the linked left/right cabinet
+pair through the shared twin supervisor: one machine, two adjacent views, one
+sound source, shared pause/quit/test state and synchronized service resets.
 
-TC4 has not reached that milestone. The supplied TC4 dongle includes `USBLINK`,
-`INET`, `INETCTL`, `AN986`, `LIBNET` and related modules; the TC3 dongle instead
-provides the `ILINK`/`ILSOCK`/`ILDRV` path used by TC3's implemented adapter.
-The presence of these modules is static inventory evidence, not a completed TC4
-transport implementation or a runtime proof of the precise protocol.
+## How the link works
 
-The TC4 launcher removes `TC3_CABINET_ROLE` and `TC3_CABINET_DIR`. Its
-`--dual-screen` option returns an explicit unavailable error. The shared menu's
-TC3 twin-cabinet action must stay disabled for the `NM00032` game ID.
+TC4 does not use TC3's `ILINK`/`ILSOCK`/`ILDRV` path. The supplied TC4 dongle
+provides `USBLINK`, `INET`, `INETCTL`, `AN986` and `LIBNET`: `TC4LOAD` treats the
+pair as `192.168.0.1:8020` (master, 1P left) and `192.168.0.2:8020` (slave, 2P
+right) exchanging `0x440`-byte MD5-authenticated UDP frames through
+doubly-linked packet-node pools in EE RAM.
 
-Before publishing TC4 twin-screen instructions, implementation and testing must
-cover:
+The compatibility layer implements a native bridge for that protocol. It stubs
+the low-level `AN986`/`LIBNET` worker entry points before the game spawns them,
+asserts the connected link-state flags, drains each worker's TX-ready node queue
+and injects peer frames into its RX-ready queue over local Unix datagram
+sockets (`<session>/tc4link-left.sock` / `tc4link-right.sock`) at 60 Hz. The
+game's own packet builders, sequence numbers, MD5 checks and link-command
+dispatch run unmodified — the bridge only replaces the wire.
 
-1. Trace TC4's actual link setup, peer identity, send/receive and timing contracts.
-2. Run isolated left/right storage and execution state with that transport.
-3. Observe the original game recognizing its link, with actual packet exchange.
-4. Start only player one and capture two genuine, synchronized camera views.
-5. Verify per-view aiming, shared pause/quit, rendering settings and Sinden borders.
-6. Validate full stage transitions, audio, stable real game rate and clean shutdown.
+Each worker's `LINK AS` side switch is forced from `TC3_CABINET_ROLE`, so the
+left machine is always `1 (LEFT)` and the right always `2 (RIGHT)` even when INI
+files are synced between workers.
 
-Until those checks pass there is no TC4 dual-screen command to recommend. Use
-single-cabinet `tools/run_tc4.py` for the currently documented boot diagnostic.
+## Verified live
+
+- Handshake completes; both workers log the `0x7`/`0xf` flag sequence and
+  sustain 60 Hz TX/RX frames in lockstep.
+- Test menu reports `LINK : ON` with `LINK AS : 1 (LEFT)` / `2 (RIGHT)` and no
+  `LINK MALFUNCTION`.
+- `Cabinet / Service → Save & Reset Machine` writes the EEPROM with a valid TC4
+  CRC16 and both workers log `synchronized cabinet reset`.
+
+## Still required before claiming linked gameplay
+
+1. Start only player one and capture two genuine, synchronized camera views
+   through a stage transition.
+2. Verify per-view aiming, gun calibration and hit registration on both views.
+3. Validate full stage transitions, audio, stable real game rate and clean
+   shutdown over long runs.
+4. Confirm disconnect/loss recovery behavior matches the original hardware.

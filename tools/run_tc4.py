@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Run TC4's compatibility baseline using an explicitly supplied TC3 foundation.
 
-TC4 cabinet networking, twin screens and Android execution are not implemented.
-The TC3-specific FireWire adapter is always disabled for this game's launch.
+The twin pair launches two linked cabinets: the native AN986/UDP bridge
+exchanges the game's own link packets between workers, sharing pause/quit/test
+state and synchronized service resets. Android execution is not implemented.
 """
 import argparse
 import json
@@ -56,12 +57,22 @@ def main():
     parser.add_argument('--seconds', type=int, help='Stop cleanly after 1..86400 seconds')
     parser.add_argument('--background', action='store_true')
     parser.add_argument('--dry-run', action='store_true', help='Review the launch without running it')
-    parser.add_argument('--dual-screen', action='store_true', help='Rejected: TC4 cabinet link is not implemented')
+    parser.add_argument('--dual-screen', action='store_true',
+        help='Start the linked left/right cabinet pair via the twin supervisor')
     args = parser.parse_args()
-    if args.dual_screen:
-        parser.error('TC4 dual-screen networking is not implemented. The TC3 FireWire adapter is a different game protocol.')
     if args.seconds is not None and not 1 <= args.seconds <= 86400:
         parser.error('--seconds must be between 1 and 86400')
+    if args.dual_screen:
+        root, _ = foundation_path(args.foundation)
+        data = args.data_root.expanduser().resolve()
+        manifest = data / 'games/NM00032.acgame'
+        if not manifest.is_file():
+            parser.error('Prepare TC4 private assets first with tools/prepare_tc4.py')
+        command = ['python3', str(root / 'tools/run_cabinet_pair.py'), '--background',
+                   '--source', str(data), '--manifest', str(manifest)]
+        if args.seconds is not None:
+            command += ['--seconds', str(args.seconds)]
+        return subprocess.call(command, cwd=root, env=environment())
     try:
         _, binary = foundation_path(args.foundation)
         data = args.data_root.expanduser().resolve()
