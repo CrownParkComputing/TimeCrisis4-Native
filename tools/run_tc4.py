@@ -69,7 +69,8 @@ def main():
         if not manifest.is_file():
             parser.error('Prepare TC4 private assets first with tools/prepare_tc4.py')
         command = ['python3', str(root / 'tools/run_cabinet_pair.py'), '--background',
-                   '--source', str(data), '--manifest', str(manifest)]
+                   '--source', str(data), '--manifest', str(manifest),
+                   '--state-root', str(ROOT / '.local')]
         if args.seconds is not None:
             command += ['--seconds', str(args.seconds)]
         return subprocess.call(command, cwd=root, env=environment())
